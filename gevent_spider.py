@@ -47,7 +47,7 @@ class BaseSpider():
         self.start_requests(phone_url_forums, callback=self.phone_forum_parse)
 
     def start_requests(self, urls, callback):
-        greenlet = self.pool.map_async(requests.get,
+        greenlet = self.pool.map_cb(requests.get,
             urls, callback=callback)
         greenlet.start()
         self.greenlet = greenlet
