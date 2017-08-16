@@ -19,7 +19,7 @@ class BaseSpider():
     def db_connect(self):
         self.con = sqlite3.connect('spi.db')
         self.cur = self.con.cursor()
-        create_table_sql = """create if not exists table spider
+        create_table_sql = """create table if not exists spider
         (id serial primary key,
         title text,
         url text);
