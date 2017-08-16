@@ -27,6 +27,12 @@ class BaseSpider():
         self.cur.execute(create_table_sql)
         self.con.commit()
 
+    def extract_tasks(self, func):
+        def wrapper(response_list):
+            self.pool.map(func, response_list)
+        return wrapper
+
+    @extract_tasks
     def article_parse(self, response):
         html = HTML(response.text)
         url = response.url
@@ -34,12 +40,14 @@ class BaseSpider():
         sql = "insert into spider (title, url) values(?, ?);"
         self.cur.execute(sql, (h1, url))
 
+    @extract_tasks
     def phone_forum_parse(self, response):
         html = HTML(response.text)
         article_urls = html.xpath("//div[@class='forum-childforum']/div/div[contains(@class,'thread-row')]/div/div/a/@href").extract()
         article_urls = map(lambda x: urljoin(self.main_url, x), article_urls)
         self.start_requests(article_urls, callback=self.article)
 
+    @extract_tasks
     def parse_main_page(self, response):
         html = HTML(response.text)
         phone_url_forums = html.xpath("//div[@class='bd']/ul/li/h3/a/@href").extract()
@@ -50,11 +58,11 @@ class BaseSpider():
         greenlet = self.pool.map_cb(requests.get,
             urls, callback=callback)
         greenlet.start()
-        self.greenlet = greenlet
+        self.greenlets.append(greenlet)
 
     def wait_until_finish(self):
         self.pool.join()
-        self.greenlet.join()
+        joinall(self.greenlets)
         self.con.commit()
         self.con.close()
         # self.greenlet.join()
