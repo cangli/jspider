@@ -27,8 +27,8 @@ class BaseSpider():
         self.cur.execute(create_table_sql)
         self.con.commit()
 
-    def extract_tasks(self, func):
-        def wrapper(response_list):
+    def extract_tasks(func):
+        def wrapper(self, response_list):
             self.pool.map(func, response_list)
         return wrapper
 
